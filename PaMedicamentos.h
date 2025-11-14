@@ -17,7 +17,7 @@ public:
     PaMedicamentos(int id_num, std::string id_alpha, std::string nombre);
     PaMedicamentos(const PaMedicamentos &orig);
     ~PaMedicamentos();
-    int getIdNum();
+    int getIdNum() const;
     void setIdNum( int id_num);
     const std::string &getIdAlpha() const ;
     void setIdAlpha(std::string id_alpha);
@@ -27,7 +27,7 @@ public:
     bool operator<(const PaMedicamentos &otro);
 
     void servidoPor(Laboratorios *lab);
-    Laboratorios* servidoPor();
+    Laboratorios* servidoPor() const;
 };
 
 

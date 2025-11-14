@@ -43,12 +43,15 @@ public:
 
     void eliminaLaboratorio(const std::string &localidad);
 
+    bool eliminaMedicamento(int id_num);
+
 
 
 private:
     map<int,PaMedicamentos> medication;
     list<Laboratorios> labs;
     vector<Farmacia> pharmacy;
+
 
 
 

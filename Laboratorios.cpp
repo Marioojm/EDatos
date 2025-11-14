@@ -40,7 +40,7 @@ Laboratorios::~Laboratorios() {
  * @brief Obtiene el identificador del laboratorio.
  * @return El ID del laboratorio.
  */
-int Laboratorios::getId()  {
+int Laboratorios::getId() const  {
     return _id;
 }
 

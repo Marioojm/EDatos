@@ -45,7 +45,7 @@ public:
      * @brief Obtiene el ID.
      * @return ID.
      */
-    int getId();
+    int getId() const;
 
     /**
      * @brief Establece el ID.

@@ -235,49 +235,69 @@ void Farmacia::nuevoStock(PaMedicamentos *pa, int n) {
  * @brief Compra (reduce) el stock de un medicamento.
  * @param id_num ID del medicamento.
  * @param n Cantidad que se desea comprar.
- * @param result (Parámetro de salida) No se utiliza en esta implementación.
- * @return Cantidad real comprada (0 si no se encuentra o no hay stock).
+ * @param result (Parámetro de salida) No se utiliza.
+ * @return Cantidad real comprada (n si tuvo éxito, 0 si no).
  */
 int Farmacia::comprarMedicamento(int id_num, int n, PaMedicamentos* &result) {
-    // Parámetro de salida 'result' no se usa según la cabecera
-    result = nullptr;
+    result = nullptr; // Parámetro de salida no se usa
 
     // 1. Crear un objeto 'Stock' temporal solo para la búsqueda
     Stock st_buscar;
     st_buscar.setIdPaMed(id_num);
 
     // 2. Buscar el Stock en el set 'order'
-    auto it = order.find(st_buscar);
+    std::set<Stock>::iterator it = order.find(st_buscar);
 
-    // 3. Caso: El medicamento no está en el inventario
-    if (it == order.end()) {
-        return 0; // No se compró nada
+    // 3. Obtener stock actual (0 si no existe)
+    int stock_actual = 0;
+    if (it != order.end()) {
+        stock_actual = it->getNumStock();
     }
 
-    // 4. Caso: El medicamento sí existe
-    int stock_actual = it->getNumStock();
-    int cantidad_comprada = 0;
+    // 4. LÓGICA DE RE-PEDIDO (Requerimiento del PDF)
+    // Si no tenemos suficiente stock (o no lo tenemos en absoluto)
+    if (stock_actual < n) {
 
-    if (stock_actual > n) {
-        // --- Hay stock de sobra ---
-        cantidad_comprada = n; // Se vende la cantidad pedida
+        // Pedimos 10 unidades a MediExpress (CORREGIDO)
+        pedidoMedicam(id_num, 10); // <--- CAMBIO DE 100 a 10
+
+        // ¡IMPORTANTE!
+        // Al llamar a pedidoMedicam, se ejecutó 'nuevoStock',
+        // lo que modificó el std::set. El iterador 'it' anterior
+        // ya no es válido. Debemos buscar de nuevo.
+        it = order.find(st_buscar);
+
+        // Actualizamos el stock_actual con el nuevo valor
+        if (it != order.end()) {
+            stock_actual = it->getNumStock();
+        } else {
+            // Si sigue sin existir (ej. MediExpress no lo tiene), fallamos
+            return 0;
+        }
+    }
+
+    // 5. INTENTO DE VENTA DEFINITIVO
+    // Después de (posiblemente) re-abastecer, comprobamos DE NUEVO
+    if (stock_actual >= n) {
+        // --- Hay stock suficiente ---
 
         // Para actualizar el set: copiar, modificar, borrar el viejo, insertar el nuevo
         Stock st_actualizado = *it;
         st_actualizado.setNumStock(stock_actual - n); // Reducir stock
 
         order.erase(it); // Borrar el viejo
-        order.insert(st_actualizado); // Insertar el actualizado
+
+        // ¡IMPORTANTE! Solo re-insertamos si queda stock
+        if (st_actualizado.getNumStock() > 0) {
+            order.insert(st_actualizado); // Insertar el actualizado
+        }
+
+        return n; // Se vendió la cantidad pedida 'n'
 
     } else {
-        // --- No hay stock de sobra (o es justo) ---
-        cantidad_comprada = stock_actual; // Se vende todo lo que queda
-
-        // Como el stock llega a 0 (o ya era 0), simplemente eliminamos la entrada
-        order.erase(it);
+        // --- No hay stock suficiente NI DESPUÉS del re-pedido ---
+        return 0; // No se compró nada
     }
-
-    return cantidad_comprada;
 }
 
 
@@ -312,7 +332,7 @@ std::vector<PaMedicamentos*> Farmacia::buscaMedicamentoNombre(const std::string 
     }
 
     // 1. Pedir a MediExpress TODOS los medicamentos que coincidan con el nombre
-    std::vector<PaMedicamentos*> v_resultados_globales = buscaMedicamentoNombre(nombre);
+    std::vector<PaMedicamentos*> v_resultados_globales = linkMedi->buscarMedicamentoNombre(nombre);
 
     // 2. Filtrar esa lista: ¿cuáles de estos tengo YO (la farmacia) en stock?
     for (PaMedicamentos* pa_med : v_resultados_globales) {

@@ -32,7 +32,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
     // --- 1. Carga de MEDICAMENTOS (a std::map) ---
 
     int id_num = 0;
-    std::string id_alpha = "";
     std::string nombre = "";
     std::string num = "";
 
@@ -44,22 +43,37 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
             if (fila != "") {
                 columnas.str(fila);
 
-                getline(columnas, num, ';');
-                getline(columnas, id_alpha, ';');
-                getline(columnas, nombre, ';');
-                id_num = stoi(num);
+                // Leemos solo 2 columnas
+                getline(columnas, num, ';');      // Columna 1: ID
+                getline(columnas, nombre, '\r');  // Columna 2: Nombre (hasta el fin de línea)
+
+                // Si el archivo CSV no tiene '\r' (es formato Unix),
+                // usa solo: getline(columnas, nombre);
+
+                if (num.empty()) continue; // saltar líneas vacías o corruptas
+
+                try {
+                    id_num = stoi(num);
+                } catch (const std::invalid_argument& e) {
+                    std::cout << "Advertencia: Saltando linea invalida. " << e.what() << std::endl;
+                    continue; // Saltar esta línea si 'num' no es un número
+                }
+
 
                 fila = "";
                 columnas.clear();
 
-                PaMedicamentos dato(id_num,id_alpha,nombre);
+                // Asignamos el nombre a las dos variables (id_alpha y nombre)
+                // ya que la clase PaMedicamentos pide 3 argumentos
+                PaMedicamentos dato(id_num, nombre, nombre);
 
-                medication.insert({id_num, dato});
+                medication.insert(std::make_pair(id_num, dato)); // Usamos make_pair (C++98)
             }
         }
         is.close();
     } else {
-        std::cout << "Error de apertura en archivo" << std::endl;
+        // Lanzamos una excepción si el archivo no se abre
+        throw std::runtime_error("Error de apertura en archivo: " + nomFichPaMed);
     }
 
     // --- 2. Carga de LABORATORIOS (a std::list) ---
@@ -132,11 +146,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
 
                 pharmacy.push_back(datof);
 
-                std::cout << ++contador
-                          << " Farma: ( cif=" << ciff
-                          << " provincia=" << provinciaf << " localidad=" << localidadf
-                          << " nombre=" << nombref << " codPostal=" << codpostalf
-                          << ")" << std::endl;
             }
         }
         is.close();
@@ -167,26 +176,27 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
     vector<Laboratorios*> madrid= buscarLabCiudad("Madrid");
     //Medicamentos sin laboratorio
     vector<PaMedicamentos*> sin= PaMedSinLab();
-    std::cout << "Total PaMedic. sin Laboratorio:" << sin.size() << std::endl;
 
     for (size_t i=0; i<madrid.size() && i<sin.size(); i++){
-         std::cout << i;
         suministrarMed(sin[i],madrid[i]);
-
-        std::cout << "   -   Id_PaMed=" << sin[i]->getIdNum() << " Laboratorio asig.=" <<
-             sin[i]->servidoPor()->getId() << std::endl;
     }
 
-    //MOSTRAR PARA COMPROBAR
-    int cont=0;
-    for (int i=0; i<medication.size(); i++){
-        if (medication[i].servidoPor())
-            std::cout << "PaMedicamento: " << medication[i].getIdNum() <<
-                 "      Labor.: " << medication[i].servidoPor()->getId() << std::endl;
-        else
-            cont++;
+    //MOSTRAR PARA COMPROBAR (CORREGIDO SIN AUTO)
+    int cont = 0;
+
+    // 1. Declaramos el iterador con su tipo completo
+    // Usamos 'const_iterator' porque solo vamos a leer datos (es más seguro)
+    std::map<int, PaMedicamentos>::const_iterator it;
+
+    // 2. Bucle 'for' clásico con iteradores
+    for (it = medication.begin(); it != medication.end(); ++it) {
+
+        // 'it->second' es el objeto PaMedicamentos.
+        // Lo guardamos en una referencia constante para que sea más claro.
+        const PaMedicamentos& med = it->second;
+
+
     }
-    std::cout << "Medicamentos sin asignar: " << cont << std::endl;
 
 // --- 6. Lectura de CIFs y Suministro a Farmacias (Vector y Map) ---
 
@@ -204,7 +214,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
         getline(columnas, ciff, ';');
         columnas.clear();
         cif_Farma.push_back(ciff);
-        std::cout << ++contador << " cifs Farma: ( cif=" << ciff << " )" << std::endl;
     }
     is.close();
 
@@ -386,20 +395,30 @@ void MediExpress::eliminaLaboratorio(const std::string &localidad){
     int contador_eliminados = 0;
 
     // 1. Desasignación de Laboratorios en los PaMedicamentos.
-    for (unsigned int i = 0; i < medication.size(); i++) {
-        if (medication[i].servidoPor() &&
-            medication[i].servidoPor()->getLocalidad().find(localidad) != std::string::npos) {
-            medication[i].servidoPor(nullptr); // Desasignar con nullptr
+    // 1. Desasignación de Laboratorios en los PaMedicamentos (CORREGIDO SIN AUTO)
+
+    // Usamos un iterador NO-constante, porque vamos a modificar los medicamentos
+    std::map<int, PaMedicamentos>::iterator it;
+
+    for (it = medication.begin(); it != medication.end(); ++it) {
+
+        // it->second es el PaMedicamentos (NO es const)
+        PaMedicamentos& med = it->second;
+
+        if (med.servidoPor() &&
+            med.servidoPor()->getLocalidad().find(localidad) != std::string::npos) {
+
+            med.servidoPor(nullptr); // Desasignar con nullptr
         }
     }
 
     // 2. Eliminación de nodos en la lista de laboratorios.
-    list<Laboratorios>::iterator it = labs.begin();
+    list<Laboratorios>::iterator it_lab = labs.begin();
     list<Laboratorios>::iterator aux;
 
-    while (it!=labs.end()) {
-        if (it->getLocalidad().find(localidad) != std::string::npos) {
-            it = labs.erase(it);
+    while (it_lab!=labs.end()) {
+        if (it_lab->getLocalidad().find(localidad) != std::string::npos) {
+            it_lab = labs.erase(it_lab);
             contador_eliminados++;
         } else {
             it++; // Si no se borra, se avanza normalmente.
@@ -444,3 +463,40 @@ void MediExpress::eliminaLaboratorio(const std::string &localidad){
      * @param nombrePA Nombre (o parte) del principio activo.
      * @return Vector de punteros a laboratorios únicos.
      */
+/**
+ * @brief Busca medicamentos por nombre en el stock GLOBAL de MediExpress.
+ */
+std::vector<PaMedicamentos*> MediExpress::buscarMedicamentoNombre(const std::string &nombre) {
+    std::vector<PaMedicamentos*> v_resultados;
+
+    // Iteramos sobre el std::map 'medication'
+    // (it->first es el ID, it->second es el PaMedicamentos)
+    for (std::map<int, PaMedicamentos>::iterator it = medication.begin(); it != medication.end(); it++) {
+
+        // Comparamos el nombre del medicamento (it->second)
+        if (it->second.getNombre().find(nombre) != std::string::npos) {
+            // Si coincide, añadimos un puntero a ese medicamento
+            v_resultados.push_back(&(it->second));
+        }
+    }
+
+    return v_resultados;
+}
+
+/**
+ * @brief Elimina un medicamento del sistema central y del stock de todas las farmacias.
+ * @param id_num ID del medicamento a eliminar.
+ * @return true si se encontró y eliminó, false en caso contrario.
+ */
+bool MediExpress::eliminaMedicamento(int id_num) {
+    // 1. Eliminarlo del stock de todas las farmacias
+    for (Farmacia &farma : pharmacy) {
+        farma.eliminarStock(id_num);
+    }
+
+    // 2. Eliminarlo del map principal de MediExpress
+    // .erase(key) devuelve el número de elementos eliminados (0 o 1 en un map)
+    size_t borrados = medication.erase(id_num);
+
+    return (borrados > 0);
+}

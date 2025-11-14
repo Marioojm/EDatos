@@ -42,7 +42,7 @@ PaMedicamentos::~PaMedicamentos() {
  * @brief Obtiene el ID numérico.
  * @return El ID numérico.
  */
-int PaMedicamentos::getIdNum() {
+int PaMedicamentos::getIdNum() const {
     return _id_num;
 }
 
@@ -120,7 +120,7 @@ void PaMedicamentos::servidoPor(Laboratorios *lab) {
  * @brief Obtiene el puntero al laboratorio que sirve este principio activo.
  * @return Puntero al objeto Laboratorios.
  */
-Laboratorios* PaMedicamentos::servidoPor() {
+Laboratorios* PaMedicamentos::servidoPor() const {
     return _laboratorio;
 }
 
