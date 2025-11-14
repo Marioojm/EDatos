@@ -235,70 +235,31 @@ void Farmacia::nuevoStock(PaMedicamentos *pa, int n) {
  * @brief Compra (reduce) el stock de un medicamento.
  * @param id_num ID del medicamento.
  * @param n Cantidad que se desea comprar.
- * @param result (Parámetro de salida) No se utiliza.
+ * @param result (Parámetro de salida)
  * @return Cantidad real comprada (n si tuvo éxito, 0 si no).
  */
 int Farmacia::comprarMedicamento(int id_num, int n, PaMedicamentos* &result) {
-    result = nullptr; // Parámetro de salida no se usa
-
-    // 1. Crear un objeto 'Stock' temporal solo para la búsqueda
-    Stock st_buscar;
-    st_buscar.setIdPaMed(id_num);
-
-    // 2. Buscar el Stock en el set 'order'
-    std::set<Stock>::iterator it = order.find(st_buscar);
-
-    // 3. Obtener stock actual (0 si no existe)
-    int stock_actual = 0;
-    if (it != order.end()) {
-        stock_actual = it->getNumStock();
-    }
-
-    // 4. LÓGICA DE RE-PEDIDO (Requerimiento del PDF)
-    // Si no tenemos suficiente stock (o no lo tenemos en absoluto)
-    if (stock_actual < n) {
-
-        // Pedimos 10 unidades a MediExpress (CORREGIDO)
-        pedidoMedicam(id_num, 10); // <--- CAMBIO DE 100 a 10
-
-        // ¡IMPORTANTE!
-        // Al llamar a pedidoMedicam, se ejecutó 'nuevoStock',
-        // lo que modificó el std::set. El iterador 'it' anterior
-        // ya no es válido. Debemos buscar de nuevo.
-        it = order.find(st_buscar);
-
-        // Actualizamos el stock_actual con el nuevo valor
+    int med_existe = buscaMedicamID(id_num);
+    if (med_existe >= n) {
+        Stock st;
+        st.setIdPaMed(id_num);
+        std::set<Stock>::iterator it = order.find(st);
         if (it != order.end()) {
-            stock_actual = it->getNumStock();
-        } else {
-            // Si sigue sin existir (ej. MediExpress no lo tiene), fallamos
-            return 0;
+            result= it->getNumber();
+            Stock aux = *it;
+            order.erase(it);
+            aux.decrementa(n);
+            order.insert(aux);
+            result = (order.find(st))->getNumber();
+
         }
+    }else {
+        pedidoMedicam(id_num, 10);
+        result= 0;
     }
-
-    // 5. INTENTO DE VENTA DEFINITIVO
-    // Después de (posiblemente) re-abastecer, comprobamos DE NUEVO
-    if (stock_actual >= n) {
-        // --- Hay stock suficiente ---
-
-        // Para actualizar el set: copiar, modificar, borrar el viejo, insertar el nuevo
-        Stock st_actualizado = *it;
-        st_actualizado.setNumStock(stock_actual - n); // Reducir stock
-
-        order.erase(it); // Borrar el viejo
-
-        // ¡IMPORTANTE! Solo re-insertamos si queda stock
-        if (st_actualizado.getNumStock() > 0) {
-            order.insert(st_actualizado); // Insertar el actualizado
-        }
-
-        return n; // Se vendió la cantidad pedida 'n'
-
-    } else {
-        // --- No hay stock suficiente NI DESPUÉS del re-pedido ---
-        return 0; // No se compró nada
-    }
+    return med_existe;
 }
+
 
 
 /**

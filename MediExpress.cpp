@@ -27,7 +27,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
     std::ifstream is;
     std::stringstream columnas;
     std::string fila;
-    int contador = 0;
 
     // --- 1. Carga de MEDICAMENTOS (a std::map) ---
 
@@ -47,8 +46,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
                 getline(columnas, num, ';');      // Columna 1: ID
                 getline(columnas, nombre, '\r');  // Columna 2: Nombre (hasta el fin de línea)
 
-                // Si el archivo CSV no tiene '\r' (es formato Unix),
-                // usa solo: getline(columnas, nombre);
 
                 if (num.empty()) continue; // saltar líneas vacías o corruptas
 
@@ -78,7 +75,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
 
     // --- 2. Carga de LABORATORIOS (a std::list) ---
 
-    int id = 0;
     std::string nombrelab = "";
     std::string direccion = "";
     std::string cp = "";
@@ -122,7 +118,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
     std::string direccionf= "";
     std::string codpostalf= "";
 
-    contador=0;
 
     is.open(nomFichFar);
     if (is.good()) {
@@ -181,8 +176,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
         suministrarMed(sin[i],madrid[i]);
     }
 
-    //MOSTRAR PARA COMPROBAR (CORREGIDO SIN AUTO)
-    int cont = 0;
 
     // 1. Declaramos el iterador con su tipo completo
     // Usamos 'const_iterator' porque solo vamos a leer datos (es más seguro)
@@ -202,7 +195,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
 
     // Volver a leer el CSV solo para los CIFs (como en el original)
     std::vector<std::string> cif_Farma;
-    contador = 0;
     is.open(nomFichFar);
     if (!is.good()) {
         throw std::runtime_error("Error abriendo farmacias.csv por segunda vez");
@@ -238,12 +230,13 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
             int c = 0;
             while (c < 100) {
                 // Suministramos 1 unidad (o la cantidad 'n' que queramos)
-                suministrarFarmacia(f, med_ids[j], 1);
+                suministrarFarmacia(f, med_ids[j], 10);
 
                 j = (j + 1) % med_ids.size(); // Ciclar por los IDs de medicamentos
                 c++;
             }
         }
+
     }
 
     std::cout << "--- [FIN DE CONSTRUCTOR MEDIEXPRESS] ---" << std::endl;
