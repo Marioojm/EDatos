@@ -1,0 +1,14 @@
+# ninja log v5
+7	188	7847397517016266	CMakeFiles/practica_4.dir/Laboratorios.cpp.obj	97bf8b2c64c957ae
+23	190	7847397517028032	CMakeFiles/practica_4.dir/Stock.cpp.obj	195e7d7119b3eaa5
+14	190	7847397517033138	CMakeFiles/practica_4.dir/PaMedicamentos.cpp.obj	843623d6d6f48988
+10	323	7847397518364619	CMakeFiles/practica_4.dir/main.cpp.obj	625efcae9404ae59
+1	357	7847397518706208	CMakeFiles/practica_4.dir/Farmacia.cpp.obj	a77c31f1461b185b
+18	570	7847397520815900	CMakeFiles/practica_4.dir/MediExpress.cpp.obj	9b0cd5c315c1d477
+570	819	7847397523291380	practica_4.exe	ef131a84d5022df6
+2	258	7847398947024183	CMakeFiles/practica_4.dir/main.cpp.obj	625efcae9404ae59
+258	405	7847398948481156	practica_4.exe	ef131a84d5022df6
+2	249	7847401108006038	CMakeFiles/practica_4.dir/main.cpp.obj	625efcae9404ae59
+249	393	7847401109421318	practica_4.exe	ef131a84d5022df6
+2	247	7847401939427772	CMakeFiles/practica_4.dir/main.cpp.obj	625efcae9404ae59
+247	392	7847401940852589	practica_4.exe	ef131a84d5022df6
