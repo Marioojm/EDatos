@@ -127,6 +127,10 @@ void Farmacia::setProvincia(const std::string &provincia) {
     Farmacia::provincia = provincia;
 }
 
+/**
+ * @brief Establece la localidad.
+ * @param localidad Nueva localidad.
+ */
 void Farmacia::setLocalidad(const std::string &localidad) {
     Farmacia::localidad = localidad;
 }
@@ -194,9 +198,9 @@ void Farmacia::pedidoMedicam(int id_num, int n){
 }
 
 /**
- * @brief Busca un medicamento en el stock local (dispense).
- * @param id_num ID numérico del medicamento.
- * @return Puntero al PaMedicamentos si se encuentra, 0 (nullptr) si no.
+ * @brief Busca un medicamento por ID y devuelve el stock.
+ * @param id_num ID del medicamento.
+ * @return Cantidad de stock (0 si no se encuentra).
  */
 int Farmacia::buscaMedicamID(int id_num) {
     Stock st;
@@ -208,14 +212,18 @@ int Farmacia::buscaMedicamID(int id_num) {
     return 0;
 }
 
+/**
+ * @brief Añade o actualiza el stock de un medicamento.
+ * @param pa Puntero al medicamento (para obtener su ID).
+ * @param n Cantidad a añadir.
+ */
 void Farmacia::nuevoStock(PaMedicamentos *pa, int n) {
     if (pa == nullptr || n <= 0) return;
 
     Stock st_buscar;
     st_buscar.setIdPaMed(pa->getIdNum());
 
-    auto it = order.find(st_buscar);
-
+    std::set<Stock>::iterator it = order.find(st_buscar);
     if (it != order.end()) {
         // El elemento existe. Lo copiamos, actualizamos, borramos el viejo e insertamos el nuevo.
         Stock st_actualizado = *it; // Copiamos el stock
@@ -259,8 +267,6 @@ int Farmacia::comprarMedicamento(int id_num, int n, PaMedicamentos* &result) {
     }
     return med_existe;
 }
-
-
 
 /**
  * @brief Elimina un medicamento del stock (lo borra del set).

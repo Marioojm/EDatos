@@ -18,14 +18,14 @@ public:
     PaMedicamentos *getNumber() const;
     void setNumber(PaMedicamentos *number);
 
-    bool operator<(const Stock &rhs) const; //Este const es obligatorio ya que es el objeto es inmutable.
+    bool operator<(const Stock &rhs) const; //Este const es obligatorio ya que el objeto es inmutable.
 
     void decrementa(int n);
     void aumenta(int n);
 
 private:
     int id_PaMed;
-    int num_stock;  //opcional mutable
+    int num_stock;
     PaMedicamentos* number;
 };
 

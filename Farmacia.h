@@ -58,35 +58,15 @@ public:
     bool operator<(const Farmacia &rhs) const;
     bool operator>(const Farmacia &other) const;
 
-    /**
-     * @brief Busca un medicamento por ID y devuelve el stock.
-     * @param id_num ID del medicamento.
-     * @return Cantidad de stock (0 si no se encuentra).
-     */
+
     int buscaMedicamID(int id_num);
 
     std::vector<PaMedicamentos*> buscaMedicamentoNombre(const std::string &nombre);
-    /**
-     * @brief Añade o actualiza el stock de un medicamento.
-     * @param pa Puntero al medicamento (para obtener su ID).
-     * @param n Cantidad a añadir.
-     */
+
     void nuevoStock(PaMedicamentos* pa, int n);
 
-    /**
-     * @brief Compra (reduce) el stock de un medicamento.
-     * @param id_num ID del medicamento.
-     * @param n Cantidad a comprar.
-     * @param result (Parámetro de salida) Puntero al PaMedicamentos (si la lógica lo requiere).
-     * @return Cantidad real comprada (0 si no hay stock).
-     */
     int comprarMedicamento(int id_num, int n, PaMedicamentos* &result);
 
-    /**
-     * @brief Elimina un medicamento del stock (cantidad = 0).
-     * @param id_num ID del medicamento a eliminar.
-     * @return true si se eliminó.
-     */
     bool eliminarStock(int id_num);
 
 

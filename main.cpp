@@ -24,7 +24,15 @@ int main() {
     try {
         // --- CARGA DE DATOS ---
         // El constructor de MediExpress carga todos los CSV y enlaza los datos
-        MediExpress medi("../pa_medicamentos.csv", "../lab2.csv", "../farmacias.csv");
+
+
+
+        MediExpress medi("C:/Users/mario/Desktop/estructuras/practica4/pa_medicamentos.csv", "C:/Users/mario/Desktop/estructuras/practica4/lab2.csv", "C:/Users/mario/Desktop/estructuras/practica4/farmacias.csv");
+
+        //MediExpress medi("../pa_medicamentos.csv", "../lab2.csv", "../farmacias.csv");
+
+
+
         cout << "Carga de datos finalizada." << endl << endl;
 
 

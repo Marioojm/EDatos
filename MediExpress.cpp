@@ -5,8 +5,6 @@
 #include "MediExpress.h"
 // Se asume la inclusión de "PaMedicamentos.h", "Laboratorios.h", "VecDin.h", y "listasEnlazadas.h" dentro de "MediExpress.h"
 
-// --- IMPLEMENTACIÓN DE MediExpress ---
-
 /**
  * @brief Constructor por defecto. Inicializa los contenedores de medicamentos y laboratorios vacíos.
  */
@@ -60,8 +58,6 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
                 fila = "";
                 columnas.clear();
 
-                // Asignamos el nombre a las dos variables (id_alpha y nombre)
-                // ya que la clase PaMedicamentos pide 3 argumentos
                 PaMedicamentos dato(id_num, nombre, nombre);
 
                 medication.insert(std::make_pair(id_num, dato)); // Usamos make_pair (C++98)
@@ -150,8 +146,8 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
 
     //ENLAZAMOS CADA 2 PAMEDIC. CON UN LABORATORIO
 
-    auto itl = labs.begin(); // Iterador de laboratorios (std::list)
-    auto itm = medication.begin(); // Iterador de medicamentos (std::map)
+    std::list<Laboratorios>::iterator itl = labs.begin();
+    std::map<int, PaMedicamentos>::iterator itm = medication.begin();
 
     while (itm != medication.end() && itl != labs.end()) {
         // Suministrar al primer medicamento
@@ -161,7 +157,7 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
         if (itm == medication.end()) break; // Salir si se acaba
 
         // Suministrar al segundo medicamento
-        itm->second.servidoPor(&(*itl)); // (forma 2 original)
+        itm->second.servidoPor(&(*itl));
 
         itm++; // Avanzar medicamento
         itl++; // Avanzar laboratorio
@@ -178,7 +174,7 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
 
 
     // 1. Declaramos el iterador con su tipo completo
-    // Usamos 'const_iterator' porque solo vamos a leer datos (es más seguro)
+    // Usamos 'const_iterator' porque solo vamos a leer datos y hace que sea mas seguro
     std::map<int, PaMedicamentos>::const_iterator it;
 
     // 2. Bucle 'for' clásico con iteradores
@@ -211,8 +207,11 @@ MediExpress::MediExpress(const std::string &nomFichPaMed, const std::string &nom
 
     // Necesitamos una lista de IDs de medicamentos para simular el acceso medication[j]
     std::vector<int> med_ids;
-    for(auto const& [id, med] : medication) {
-        med_ids.push_back(id);
+    // 1. Declaramos el iterador (el "puntero" que recorre el mapa)
+    std::map<int, PaMedicamentos>::iterator ite;
+
+    for (ite = medication.begin(); ite != medication.end(); ++ite) {
+        med_ids.push_back(ite->first);
     }
 
     if (med_ids.empty()) {
@@ -272,6 +271,12 @@ void MediExpress::suministrarMed(PaMedicamentos *pa, Laboratorios *l){
     }
 }
 
+/**
+     * @brief Suministra un medicamento (por ID) a una farmacia.
+     * @param f Puntero a la farmacia que recibe.
+     * @param id_num ID del medicamento a suministrar.
+     * @param n Numero de medicamentos a suministrar
+     */
 void MediExpress::suministrarFarmacia(Farmacia* f, int id_num, int n) {
     if (f == nullptr) return;
 
@@ -316,6 +321,11 @@ vector<Laboratorios*> MediExpress::buscarLabCiudad(const std::string &nombreCiud
     return labor;
 }
 
+/**
+  * @brief Busca laboratorios que suministren un medicamento (por nombre P.A.).
+  * @param nombrePA Nombre (o parte) del principio activo.
+  * @return Vector de punteros a laboratorios únicos.
+  */
 vector<Laboratorios*> MediExpress::buscarLabs(const std::string &nombrePA) {
 
     vector<Laboratorios*> laboratorios;
@@ -388,8 +398,6 @@ void MediExpress::eliminaLaboratorio(const std::string &localidad){
     int contador_eliminados = 0;
 
     // 1. Desasignación de Laboratorios en los PaMedicamentos.
-    // 1. Desasignación de Laboratorios en los PaMedicamentos (CORREGIDO SIN AUTO)
-
     // Usamos un iterador NO-constante, porque vamos a modificar los medicamentos
     std::map<int, PaMedicamentos>::iterator it;
 
@@ -420,42 +428,35 @@ void MediExpress::eliminaLaboratorio(const std::string &localidad){
     std::cout << "Total de laboratorios de '" << localidad << "' eliminados: " << contador_eliminados << std::endl;
 }
 
-    /**
-     * @brief Busca una farmacia por su CIF.
-     * @param cif CIF a buscar.
-     * @return Puntero a la farmacia o nullptr si no se encuentra.
-     */
-     Farmacia* MediExpress::buscarFarmacia(const string &cif){
-        for (int i=0; i<pharmacy.size(); i++){
-            if (pharmacy[i].getCif()==cif)
-                return &pharmacy[i];
-        }
-        return 0;
+/**
+ * @brief Busca una farmacia por su CIF.
+ * @param cif CIF a buscar.
+ * @return Puntero a la farmacia o nullptr si no se encuentra.
+ */
+Farmacia* MediExpress::buscarFarmacia(const string &cif){
+    for (int i=0; i<pharmacy.size(); i++){
+        if (pharmacy[i].getCif()==cif)
+            return &pharmacy[i];
     }
+    return 0;
+}
 
-    vector<Farmacia*> MediExpress::buscarFarmacias(const std::string &provincia) {
-         vector<Farmacia*> v_resultados;
+/**
+ * @brief Busca farmacias en una provincia.
+ * @param provincia provincia en la que buscar.
+ * @return Vector con las farmacias en la provincia donde se busca.
+ */
+vector<Farmacia*> MediExpress::buscarFarmacias(const std::string &provincia) {
+    vector<Farmacia*> v_resultados;
 
-         for (auto& farma : pharmacy) {
-             if (farma.getProvincia()==provincia){
-                 v_resultados.push_back(&farma);
-             }
-         }
-         return v_resultados;
-     }
+    for (unsigned int i = 0; i < pharmacy.size(); i++) {
+        if (pharmacy[i].getProvincia() == provincia) {
+            v_resultados.push_back(&pharmacy[i]);
+        }
+    }
+    return v_resultados;
+}
 
-    /**
-     * @brief Suministra un medicamento (por ID) a una farmacia.
-     * @param f Puntero a la farmacia que recibe.
-     * @param id_num ID del medicamento a suministrar.
-     */
-
-
-    /**
-     * @brief Busca laboratorios que suministren un medicamento (por nombre P.A.).
-     * @param nombrePA Nombre (o parte) del principio activo.
-     * @return Vector de punteros a laboratorios únicos.
-     */
 /**
  * @brief Busca medicamentos por nombre en el stock GLOBAL de MediExpress.
  */
